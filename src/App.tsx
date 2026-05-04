@@ -2,10 +2,11 @@ import "./App.css";
 import { fetchNFCe } from "./services/fetch-nfce";
 import { useState } from "react";
 import { QrScanner } from "./components/QrScanner";
+import { CupomFiscal } from "./models/CupomFiscal";
 
 
 function App() {
-    const [tributes, setTributes] = useState<string>("");
+    const [cupom, setCupom] = useState<CupomFiscal | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [showScanner, setShowScanner] = useState<boolean>(false);
 
@@ -13,7 +14,17 @@ function App() {
         try {
             setError(null);
             const data = await fetchNFCe(param);
-            setTributes(data);
+            console.log("Dados da NFC-e:", data);
+            
+            // Criando instância com dados atuais (impostos) e placeholders
+            const novoCupom = new CupomFiscal(
+                data.storeName || "Loja Desconcida",
+                data.totalValue || 0,
+                data.tributes || 0,
+                data.purchaseDate ? new Date(data.purchaseDate) : new Date()
+            );
+            
+            setCupom(novoCupom);
         } catch (err) {
             console.error(err);
             setError(
@@ -51,7 +62,11 @@ function App() {
             {error ? (
                 <p style={{ color: "red" }}>{error}</p>
             ) : (
-                <p>{tributes}</p>
+                <p>{cupom ?
+                    cupom.storeName + " - " + 
+                    cupom.purchaseDate.toLocaleDateString() + 
+                    " - Valor Total: R$ " + cupom.valorTotalFormatado + 
+                    " - Impostos: R$ " + cupom.valorImpostosFormatados : "Aguardando leitura..."}</p>
             )}
 
             <div style={{ margin: "20px 0" }}>

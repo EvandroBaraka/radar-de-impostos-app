@@ -10,5 +10,5 @@ export const fetchNFCe = async (query: string) => {
     }
 
     const data = await response.json();
-    return data.tributes ?? "";
+    return data ?? "";
 };
