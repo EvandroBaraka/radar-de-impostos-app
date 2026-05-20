@@ -1,6 +1,5 @@
 import { Scanner as PackageScanner } from "@yudiel/react-qr-scanner";
 import { useState } from "react";
-import "./QrScanner.css";
 
 interface ScannerProps {
     onScan: (result: string) => void;
@@ -40,12 +39,17 @@ export const QrScanner = ({ onScan, onError }: ScannerProps) => {
     };
 
     return (
-        <div className="scanner-container">
+        <div className="max-w-125 m-auto">
             <h2>Escaneie o QR Code da NFC-e</h2>
             {isScanning && (
                 <PackageScanner
                     onScan={handleScan}
                     onError={handleError}
+                    components={{
+                        torch: true, // Show torch/flashlight button (if supported)
+                        zoom: true, // Show zoom control (if supported)
+                    }}
+                    scanDelay={350}
                     constraints={{
                         facingMode: { ideal: "environment" }, // Prefere traseira, mas permite frontal
                     }}

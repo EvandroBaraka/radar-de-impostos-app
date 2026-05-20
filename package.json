@@ -1,10 +1,10 @@
 {
-  "name": "meu-imposto-app",
+  "name": "radar-de-impostos-app",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host",
     "serve-api": "node server.js",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
@@ -12,15 +12,20 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.101.1",
+    "@tailwindcss/vite": "^4.3.0",
+    "@tanstack/react-router": "^1.170.4",
+    "@vitejs/plugin-basic-ssl": "^2.3.0",
     "@yudiel/react-qr-scanner": "^2.5.1",
     "cheerio": "^1.2.0",
     "dotenv": "^17.3.1",
     "express": "^4.18.3",
     "react": "^19.2.4",
-    "react-dom": "^19.2.4"
+    "react-dom": "^19.2.4",
+    "tailwindcss": "^4.3.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
+    "@tanstack/router-plugin": "^1.168.6",
     "@types/node": "^24.12.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",

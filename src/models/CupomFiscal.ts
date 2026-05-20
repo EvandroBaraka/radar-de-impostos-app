@@ -3,7 +3,8 @@ export class CupomFiscal {
     public storeName: string,
     public totalValue: number,
     public tributes: number,
-    public purchaseDate: Date
+    public purchaseDate: Date,
+    public acessKey?: string
   ) {}
 
   get valorTotalFormatado(): string {
