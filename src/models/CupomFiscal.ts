@@ -1,11 +1,12 @@
 export class CupomFiscal {
   constructor(
     public storeName: string,
-    public cnpj: number,
+    public cnpj: string,
+    public category: string,
     public totalValue: number,
     public tributes: number,
     public purchaseDate: Date,
-    public nfeKey?: number,
+    public nfeKey?: string,
   ) {}
 
   get formatedTotalValue(): string {

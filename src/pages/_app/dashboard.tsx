@@ -107,8 +107,9 @@ function Dashboard() {
 
             const data = await fetchNFCe(url, token);
             const novoCupom = new CupomFiscal(
-                data.storeName || "Loja Desconcida",
-                data.cnpj || null,
+                data.storeName || "Loja Desconhecida",
+                data.cnpj || "",
+                data.category || "Outros",
                 data.totalValue || 0,
                 data.tributes || 0,
                 data.purchaseDate ? new Date(data.purchaseDate) : new Date(),
@@ -183,12 +184,13 @@ function Dashboard() {
                         />
                     ) : cupom ? (
                         <div className="flex flex-col items-center justify-center gap-3">
-                            <p>
-                                {cupom.storeName} - CNPJ: {cupom.cnpj} -{" "}
-                                {cupom.formatedDate} - Valor Total:{" "}
-                                {cupom.formatedTotalValue} - Impostos
-                                aproximados: {cupom.formatedTributes} - Chave de
-                                Acesso: {cupom.nfeKey}
+                            <p className="text-center">
+                                <span className="font-bold">{cupom.storeName}</span><br />
+                                <span className="text-sm text-[#90a1b9]">Categoria: {cupom.category}</span><br />
+                                CNPJ: {cupom.cnpj} - {cupom.formatedDate}<br />
+                                Valor Total: {cupom.formatedTotalValue}<br />
+                                Impostos aproximados: {cupom.formatedTributes}<br />
+                                <span className="text-xs text-[#475569]">Chave: {cupom.nfeKey}</span>
                             </p>
                             <div className="flex gap-3 items-center justify-center">
                                 <Button onClick={() => setIsScannerOpen(true)}>

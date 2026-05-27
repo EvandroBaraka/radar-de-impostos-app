@@ -4,7 +4,6 @@ import { useState } from "react";
 import QrScanner from "./components/QrScanner";
 import { CupomFiscal } from "./models/CupomFiscal";
 import Loader from "./components/Loader";
-import { parseDateBR } from "./utils/date-utils";
 
 function App() {
     const [cupom, setCupom] = useState<CupomFiscal | null>(null);
@@ -26,12 +25,13 @@ function App() {
 
             // Criando instância com dados atuais (impostos) e placeholders
             const novoCupom = new CupomFiscal(
-                data.storeName || "Loja Desconcida",
-                data.cnpj || null,
+                data.storeName || "Loja Desconhecida",
+                data.cnpj || "",
+                data.category || "Outros",
                 data.totalValue || 0,
                 data.tributes || 0,
-                data.purchaseDate ? parseDateBR(data.purchaseDate) : new Date(),
-                data.acessKey || undefined,
+                data.purchaseDate ? new Date(data.purchaseDate) : new Date(),
+                data.nfeKey || undefined,
             );
             console.log("Data.purchaseDate:", data.purchaseDate);
             console.log("Novo cupom criado:", novoCupom);
@@ -82,9 +82,9 @@ function App() {
                           " - " +
                           cupom.purchaseDate.toLocaleDateString() +
                           " - Valor Total: R$ " +
-                          cupom.valorTotalFormatado +
+                          cupom.formatedTotalValue +
                           " - Impostos aproximados: R$ " +
-                          cupom.valorImpostosFormatados +
+                          cupom.formatedTributes +
                           " - Chave de Acesso: " +
                           cupom.nfeKey
                         : "Aguardando leitura..."}

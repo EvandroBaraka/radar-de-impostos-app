@@ -49,9 +49,10 @@ export function RegisterForm() {
                 </div>
 
                 <div className="pt-2">
-                    <Button variant="primary" size="md" className="w-full justify-center">
-                        Criar conta
+                    <Button variant="primary" size="md" classes="w-full justify-center">
+                        Cadastrar
                     </Button>
+
                 </div>
             </form>
 
