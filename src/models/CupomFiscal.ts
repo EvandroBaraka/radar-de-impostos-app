@@ -1,26 +1,32 @@
 export class CupomFiscal {
   constructor(
     public storeName: string,
+    public cnpj: number,
     public totalValue: number,
     public tributes: number,
     public purchaseDate: Date,
-    public acessKey?: string
+    public nfeKey?: number,
   ) {}
 
-  get valorTotalFormatado(): string {
+  get formatedTotalValue(): string {
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
       currency: "BRL",
     }).format(this.totalValue);
   }
 
-  /**
-   * Formata o valor dos impostos para a moeda local (BRL).
-   */
-  get valorImpostosFormatados(): string {
+  get formatedTributes(): string {
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
       currency: "BRL",
     }).format(this.tributes);
+  }
+  
+  get formatedDate(): string {
+    return this.purchaseDate.toLocaleDateString("pt-BR", {
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+    });
   }
 }

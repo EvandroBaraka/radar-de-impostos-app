@@ -1,20 +1,16 @@
-import { Scanner as PackageScanner } from "@yudiel/react-qr-scanner";
-import { useState } from "react";
+import { Scanner } from "@yudiel/react-qr-scanner";
 
 interface ScannerProps {
     onScan: (result: string) => void;
     onError?: (error: string) => void;
 }
 
-export const QrScanner = ({ onScan, onError }: ScannerProps) => {
-    const [isScanning, setIsScanning] = useState(true);
-
+const QrScanner = ({ onScan, onError }: ScannerProps) => {
     const handleScan = (detectedCodes: Array<{ rawValue: string }>) => {
         if (detectedCodes.length === 0) {
             onError?.("Nenhum código detectado");
             return;
         }
-        setIsScanning(false);
         onScan(detectedCodes[0].rawValue);
     };
 
@@ -41,8 +37,7 @@ export const QrScanner = ({ onScan, onError }: ScannerProps) => {
     return (
         <div className="max-w-125 m-auto">
             <h2>Escaneie o QR Code da NFC-e</h2>
-            {isScanning && (
-                <PackageScanner
+                <Scanner
                     onScan={handleScan}
                     onError={handleError}
                     components={{
@@ -66,25 +61,8 @@ export const QrScanner = ({ onScan, onError }: ScannerProps) => {
                         },
                     }}
                 />
-            )}
-            {!isScanning && (
-                <div>
-                    <p>QR Code escaneado com sucesso!</p>
-                    <button
-                        onClick={() => setIsScanning(true)}
-                        style={{
-                            padding: "10px 20px",
-                            backgroundColor: "#007bff",
-                            color: "white",
-                            border: "none",
-                            borderRadius: "4px",
-                            cursor: "pointer",
-                        }}
-                    >
-                        Escanear novamente
-                    </button>
-                </div>
-            )}
         </div>
     );
 };
+
+export default  QrScanner;

@@ -1,8 +1,13 @@
-import { Outlet, createFileRoute } from "@tanstack/react-router";
+import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
 import bgImage from "../../assets/impostos-bg.jpg";
 import { Logo } from "../../components/Logo";
 
 export const Route = createFileRoute("/auth")({
+    beforeLoad: () => {
+        if (localStorage.getItem("token")) {
+            throw redirect({ to: "/dashboard" });
+        }
+    },
     component: AuthLayout,
 });
 

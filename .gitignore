@@ -27,3 +27,4 @@ dist-ssr
 
 server.js
 docs/
+mocks/
