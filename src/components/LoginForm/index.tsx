@@ -11,7 +11,7 @@ export function LoginForm() {
 
     const navigate = useNavigate();
 
-    const handleLogin = async (e?: React.FormEvent) => {
+    const handleLogin = async (e?: React.SubmitEvent<HTMLFormElement>) => {
         e?.preventDefault();
         setError(null);
         setIsLoading(true);

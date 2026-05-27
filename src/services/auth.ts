@@ -1,6 +1,3 @@
-/**
- * Realiza o login do usuário na API
- */
 export async function loginUser(email: string, password: string) {
     const response = await fetch("http://localhost:3000/api/auth/login", {
         method: "POST",
@@ -16,5 +13,5 @@ export async function loginUser(email: string, password: string) {
         throw new Error(data.error || "Erro ao realizar login");
     }
 
-    return data; // Retorna { token: "..." }
+    return data; // Retorna { token, userID }
 }

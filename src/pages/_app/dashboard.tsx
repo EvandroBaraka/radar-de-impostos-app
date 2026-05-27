@@ -23,6 +23,7 @@ import {
     Area,
 } from "recharts";
 import { fetchNFCe } from "../../services/fetch-nfce";
+import { saveReceipt } from "../../services/receipts";
 import { CupomFiscal } from "../../models/CupomFiscal";
 import Loader from "../../components/Loader";
 import { Button } from "../../components/Button";
@@ -142,6 +143,31 @@ function Dashboard() {
         }
     };
 
+    const handleSave = async () => {
+        if (!cupom) return;
+
+        try {
+            setError(null);
+            setIsLoading(true);
+
+            const token = localStorage.getItem("token");
+            if (!token) {
+                console.error("Token não encontrado");
+                return;
+            }
+
+            await saveReceipt(cupom, token);
+            setIsModalOpen(false);
+            setCupom(null);
+            // Aqui poderíamos recarregar as estatísticas e lista de compras
+        } catch (err) {
+            console.error(err);
+            setError(err instanceof Error ? err.message : "Erro ao salvar cupom fiscal");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     return (
         <div className="w-full max-w-7xl mx-auto px-4 py-8 space-y-8 animate-in fade-in duration-500">
             {/* Header Section */}
@@ -196,10 +222,11 @@ function Dashboard() {
                                 <Button onClick={() => setIsScannerOpen(true)}>
                                     Escanear novamente
                                 </Button>
-                                <Button onClick={() => setIsModalOpen(false)}>
-                                    Salvar cupom
+                                <Button onClick={handleSave} disabled={isLoading}>
+                                    {isLoading ? "Salvando..." : "Salvar cupom"}
                                 </Button>
                             </div>
+                            {error && <p style={{ color: "red" }}>{error}</p>}
                         </div>
                     ) : isLoading ? (
                         <div className="flex flex-col items-center justify-center gap-3">
