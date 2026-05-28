@@ -11,16 +11,19 @@ export function LoginForm() {
 
     const navigate = useNavigate();
 
-    const handleLogin = async (e?: React.SubmitEvent<HTMLFormElement>) => {
+    const handleLogin = async (e?: React.FormEvent) => {
         e?.preventDefault();
         setError(null);
         setIsLoading(true);
 
         try {
-            const token = await loginUser(email, password);
+            const userData = await loginUser(email, password);
 
             // Salva o token localmente para autenticar as próximas requisições
-            localStorage.setItem("token", token);
+            localStorage.setItem("token", userData.token);
+            localStorage.setItem("userName", userData.userName);
+            localStorage.setItem("userEmail", userData.userEmail);
+
 
             // Redireciona o usuário para o dashboard após login bem sucedido
             navigate({ to: "/dashboard" });
@@ -94,7 +97,7 @@ export function LoginForm() {
                         variant="primary"
                         size="md"
                         classes="w-full justify-center"
-                        onClick={handleLogin}
+                        type="submit"
                         disabled={isLoading}
                     >
                         {isLoading ? "Entrando..." : "Entrar"}

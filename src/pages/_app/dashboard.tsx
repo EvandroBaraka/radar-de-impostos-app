@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { useState, lazy, Suspense } from "react";
+import { useState, lazy, Suspense, useEffect, useCallback } from "react";
 import {
     TrendingUp,
     TrendingDown,
@@ -10,8 +10,12 @@ import {
     QrCode,
     ShoppingBag,
     Utensils,
-    Zap,
+    Pill,
+    Cross,
     Fuel,
+    Shirt,
+    MonitorSmartphone,
+    Bus
 } from "lucide-react";
 import {
     XAxis,
@@ -23,7 +27,7 @@ import {
     Area,
 } from "recharts";
 import { fetchNFCe } from "../../services/fetch-nfce";
-import { saveReceipt } from "../../services/receipts";
+import { saveReceipt, listReceipts, getStats } from "../../services/receipts";
 import { CupomFiscal } from "../../models/CupomFiscal";
 import Loader from "../../components/Loader";
 import { Button } from "../../components/Button";
@@ -31,51 +35,30 @@ import { Button } from "../../components/Button";
 const Modal = lazy(() => import("../../components/Modal"));
 const QrScanner = lazy(() => import("../../components/QrScanner"));
 
-const data = [
+const categoryIcons: { [key: string]: React.ElementType } = {
+    "Mercado": ShoppingBag,
+    "Farmácia": Pill,
+    "Restaurante": Utensils,
+    "Combustível": Fuel,
+    "Vestuário": Shirt,
+    "Eletrônicos": MonitorSmartphone,
+    "Saúde": Cross,
+    "Transporte": Bus,
+    "Outros": ReceiptIcon,
+};
+
+const getCategoryIcon = (category: string) => {
+    return categoryIcons[category] || ReceiptIcon;
+};
+
+// Mock data para o gráfico enquanto a API não fornece dados históricos por mês
+const chartData = [
     { name: "Dez", gastos: 2400, impostos: 400 },
     { name: "Jan", gastos: 1800, impostos: 350 },
     { name: "Fev", gastos: 2900, impostos: 550 },
     { name: "Mar", gastos: 2200, impostos: 440 },
     { name: "Abr", gastos: 3100, impostos: 620 },
     { name: "Mai", gastos: 2700, impostos: 540 },
-];
-
-const lastPurchases = [
-    {
-        id: 1,
-        establishment: "Supermercado Pão de Açúcar",
-        date: "Hoje, 14:32",
-        value: 18.4,
-        icon: ShoppingBag,
-    },
-    {
-        id: 2,
-        establishment: "Posto Shell",
-        date: "Ontem, 09:12",
-        value: 42.1,
-        icon: Fuel,
-    },
-    {
-        id: 3,
-        establishment: "Drogaria São Paulo",
-        date: "12 mai, 18:45",
-        value: 6.72,
-        icon: Zap,
-    },
-    {
-        id: 4,
-        establishment: "Restaurante Outback",
-        date: "10 mai, 21:08",
-        value: 24.9,
-        icon: Utensils,
-    },
-    {
-        id: 5,
-        establishment: "Carrefour Express",
-        date: "08 mai, 11:20",
-        value: 9.55,
-        icon: ShoppingBag,
-    },
 ];
 
 export const Route = createFileRoute("/_app/dashboard")({
@@ -88,11 +71,36 @@ export const Route = createFileRoute("/_app/dashboard")({
 });
 
 function Dashboard() {
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isScannerOpen, setIsScannerOpen] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+    const [isScannerOpen, setIsScannerOpen] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [cupom, setCupom] = useState<CupomFiscal | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [receipts, setReceipts] = useState<CupomFiscal[]>([]);
+    const [stats, setStats] = useState<{ totalSpent: number, totalTaxes: number } | null>(null);
+    
+    const userName = localStorage.getItem("userName");
+    const token = localStorage.getItem("token");
+
+    const loadDashboardData = useCallback(async () => {
+        if (!token) return;
+        
+        try {
+            const [receiptsData, statsData] = await Promise.all([
+                listReceipts(token),
+                getStats(token)
+            ]);
+            
+            setReceipts(receiptsData);
+            setStats(statsData);
+        } catch (err) {
+            console.error("Erro ao carregar dados da dashboard:", err);
+        }
+    }, [token]);
+
+    useEffect(() => {
+        loadDashboardData();
+    }, [loadDashboardData]);
 
     const fetchData = async (url: string) => {
         try {
@@ -100,7 +108,6 @@ function Dashboard() {
             setIsLoading(true);
             setIsScannerOpen(false);
 
-            const token = localStorage.getItem("token");
             if (!token) {
                 console.error("Token não encontrado");
                 return;
@@ -144,22 +151,18 @@ function Dashboard() {
     };
 
     const handleSave = async () => {
-        if (!cupom) return;
+        if (!cupom || !token) return;
 
         try {
             setError(null);
             setIsLoading(true);
 
-            const token = localStorage.getItem("token");
-            if (!token) {
-                console.error("Token não encontrado");
-                return;
-            }
-
             await saveReceipt(cupom, token);
             setIsModalOpen(false);
             setCupom(null);
-            // Aqui poderíamos recarregar as estatísticas e lista de compras
+            
+            // Recarrega os dados após salvar
+            await loadDashboardData();
         } catch (err) {
             console.error(err);
             setError(err instanceof Error ? err.message : "Erro ao salvar cupom fiscal");
@@ -168,16 +171,31 @@ function Dashboard() {
         }
     };
 
+    const formatCurrency = (value: number) => {
+        return new Intl.NumberFormat("pt-BR", {
+            style: "currency",
+            currency: "BRL",
+        }).format(value);
+    };
+
+    const taxBurden = stats && stats.totalSpent > 0 
+        ? ((stats.totalTaxes / stats.totalSpent) * 100).toFixed(1) 
+        : "0";
+
+    const mostExpensiveReceipt = receipts.length > 0 
+        ? receipts.reduce((prev, current) => (prev.totalValue > current.totalValue) ? prev : current)
+        : null;
+
     return (
         <div className="w-full max-w-7xl mx-auto px-4 py-8 space-y-8 animate-in fade-in duration-500">
             {/* Header Section */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h1 className="text-3xl font-bold flex items-center gap-2">
-                        Olá, João <span className="animate-bounce">👋</span>
+                        Olá, {userName} <span className="animate-bounce">👋</span>
                     </h1>
                     <p className="text-[#90a1b9]">
-                        Aqui está o resumo dos seus impostos neste mês.
+                        Aqui está o resumo dos seus impostos registrados.
                     </p>
                 </div>
 
@@ -246,30 +264,30 @@ function Dashboard() {
             {/* Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <StatCard
-                    title="Impostos do Mês"
-                    value="R$ 450,20"
-                    change="+2,5%"
-                    isPositive={false}
+                    title="Total em Impostos"
+                    value={formatCurrency(stats?.totalTaxes || 0)}
+                    change="+0%"
+                    isPositive={true}
                     icon={DollarSign}
                 />
                 <StatCard
-                    title="Gasto do Mês"
-                    value="R$ 2.130,90"
-                    change="+8,1%"
-                    isPositive={false}
+                    title="Total em Gastos"
+                    value={formatCurrency(stats?.totalSpent || 0)}
+                    change="+0%"
+                    isPositive={true}
                     icon={ReceiptIcon}
                 />
                 <StatCard
                     title="Carga Tributária"
-                    value="21,1%"
-                    change="-0,8%"
+                    value={`${taxBurden}%`}
+                    change="0%"
                     isPositive={true}
                     icon={Percent}
                 />
                 <StatCard
                     title="Nota Mais Cara"
-                    value="R$ 384,70"
-                    description="Supermercado Extra · 05 mai"
+                    value={mostExpensiveReceipt ? formatCurrency(mostExpensiveReceipt.totalValue) : "R$ 0,00"}
+                    description={mostExpensiveReceipt ? `${mostExpensiveReceipt.storeName} · ${mostExpensiveReceipt.formatedDate}` : "Nenhum cupom salvo"}
                     icon={Trophy}
                 />
             </div>
@@ -283,7 +301,7 @@ function Dashboard() {
                     </h3>
                     <div className="h-87.5 w-full">
                         <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={data}>
+                            <AreaChart data={chartData}>
                                 <defs>
                                     <linearGradient
                                         id="colorGastos"
@@ -379,36 +397,44 @@ function Dashboard() {
                         Últimas Compras
                     </h3>
                     <div className="space-y-6">
-                        {lastPurchases.map((purchase) => (
-                            <div
-                                key={purchase.id}
-                                className="flex items-center justify-between group cursor-pointer"
-                            >
-                                <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-lg bg-[#1e293b] flex items-center justify-center group-hover:bg-[#334155] transition-colors">
-                                        <purchase.icon className="w-5 h-5 text-[#90a1b9]" />
+                        {receipts.length === 0 ? (
+                            <p className="text-[#90a1b9] text-center py-8">
+                                Nenhum cupom registrado ainda.
+                            </p>
+                        ) : (
+                            receipts.slice(0, 5).map((receipt, index) => {
+                                const Icon = getCategoryIcon(receipt.category);
+                                return (
+                                    <div
+                                        key={receipt.nfeKey || index}
+                                        className="flex items-center justify-between group cursor-pointer"
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-10 h-10 rounded-lg bg-[#1e293b] flex items-center justify-center group-hover:bg-[#334155] transition-colors">
+                                                <Icon className="w-5 h-5 text-[#90a1b9]" />
+                                            </div>
+                                            <div>
+                                                <h4 className="text-sm font-medium group-hover:text-blue-400 transition-colors">
+                                                    {receipt.storeName}
+                                                </h4>
+                                                <p className="text-xs text-[#475569]">
+                                                    {receipt.formatedDate}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <span className="font-semibold text-sm">
+                                            {receipt.formatedTotalValue}
+                                        </span>
                                     </div>
-                                    <div>
-                                        <h4 className="text-sm font-medium group-hover:text-blue-400 transition-colors">
-                                            {purchase.establishment}
-                                        </h4>
-                                        <p className="text-xs text-[#475569]">
-                                            {purchase.date}
-                                        </p>
-                                    </div>
-                                </div>
-                                <span className="font-semibold text-sm">
-                                    R${" "}
-                                    {purchase.value.toLocaleString("pt-BR", {
-                                        minimumFractionDigits: 2,
-                                    })}
-                                </span>
-                            </div>
-                        ))}
+                                );
+                            })
+                        )}
                     </div>
-                    <button className="w-full mt-8 py-2 text-sm text-[#90a1b9] hover:text-white transition-colors border-t border-[#1e293b]">
-                        Ver histórico completo
-                    </button>
+                    {receipts.length > 5 && (
+                        <button className="w-full mt-8 py-2 text-sm text-[#90a1b9] hover:text-white transition-colors border-t border-[#1e293b]">
+                            Ver histórico completo
+                        </button>
+                    )}
                 </div>
             </div>
         </div>
@@ -455,7 +481,7 @@ function StatCard({
                         )}
                         {change}
                         <span className="text-[#475569] ml-1">
-                            em relação ao mês passado
+                            em relação ao total
                         </span>
                     </div>
                 )}

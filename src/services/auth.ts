@@ -15,3 +15,21 @@ export async function loginUser(email: string, password: string) {
 
     return data; // Retorna { token, userID }
 }
+
+export async function registerUser(email: string, password: string, name?: string) {
+    const response = await fetch("http://localhost:3000/api/auth/register", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password, name }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data.error || "Erro ao realizar cadastro");
+    }
+
+    return data;
+}

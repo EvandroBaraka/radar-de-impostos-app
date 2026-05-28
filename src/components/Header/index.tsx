@@ -16,7 +16,7 @@ export const Header = () => {
     });
 
     const handleLogout = () => {
-        localStorage.removeItem("token");
+        localStorage.clear();
         setIsAuthenticated(false);
         setIsDropdownOpen(false);
 

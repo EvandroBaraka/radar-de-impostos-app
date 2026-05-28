@@ -5,6 +5,7 @@ interface ButtonProps {
     onClick?: () => Promise<void> | void;
     disabled?: boolean;
     classes?: string;
+    type?: "button" | "submit" | "reset";
 }
 
 export const Button = ({
@@ -14,6 +15,7 @@ export const Button = ({
     onClick,
     disabled = false,
     classes = "",
+    type = "button",
 }: ButtonProps) => {
     const buttonStyles = {
         base: "flex justify-center items-center gap-2 text-nowrap leading-none hover:cursor-pointer transition-colors duration-200 font-medium rounded-xl transition py-3",
@@ -36,6 +38,7 @@ export const Button = ({
             className={className + classes}
             onClick={onClick}
             disabled={disabled}
+            type={type}
         >
             {children}
         </button>
