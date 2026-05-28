@@ -1,9 +1,11 @@
 import { CupomFiscal } from "../models/CupomFiscal";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 export const saveReceipt = async (cupom: CupomFiscal, token: string) => {
     console.log("Salvando cupom:", cupom);
     
-    const response = await fetch("http://localhost:3000/api/receipts/add", {
+    const response = await fetch(`${API_URL}/api/receipts/add`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -37,7 +39,7 @@ export const saveReceipt = async (cupom: CupomFiscal, token: string) => {
 };
 
 export const listReceipts = async (token: string): Promise<CupomFiscal[]> => {
-    const response = await fetch("http://localhost:3000/api/receipts/list", {
+    const response = await fetch(`${API_URL}/api/receipts/list`, {
         headers: {
             Authorization: `Bearer ${token}`,
         },
@@ -69,7 +71,7 @@ export const listReceipts = async (token: string): Promise<CupomFiscal[]> => {
 };
 
 export const getStats = async (token: string) => {
-    const response = await fetch("http://localhost:3000/api/stats/summary", {
+    const response = await fetch(`${API_URL}/api/stats/summary`, {
         headers: {
             Authorization: `Bearer ${token}`,
         },

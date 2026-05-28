@@ -1,6 +1,8 @@
+const API_URL = import.meta.env.VITE_API_URL;
+
 export const fetchNFCe = async (url: string, token: string) => {
     console.log("Buscando NFC-e pela url:", url);
-    const response = await fetch(`http://localhost:3000/api/receipts/search?url=${url}`, {
+    const response = await fetch(`${API_URL}/api/receipts/search?url=${url}`, {
         headers: {
             Authorization: `Bearer ${token}`,
         },
