@@ -20,7 +20,7 @@ function AuthLayout() {
                 style={{ backgroundImage: `url(${bgImage})` }}
             />
             {/* Content */}
-            <div className="relative z-10 w-full h-screen flex flex-col justify-center items-center gap-8">
+            <div className="relative z-10 w-full min-h-screen flex flex-col justify-center items-center gap-5">
                 <Logo />
                 <Outlet />
             </div>

@@ -1,23 +1,37 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { z } from "zod";
+import { useForm, type SubmitHandler } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "../Button";
 import { loginUser } from "../../services/auth";
 
+const loginSchema = z.object({
+    email: z.email("Utilize um email válido"),
+    password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres").max(30, "A senha deve ter no máximo 30 caracteres"),
+});
+
+type LoginData = z.infer<typeof loginSchema>;
+
 export function LoginForm() {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [error, setError] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(false);
+    const {
+        handleSubmit,
+        register,
+        formState: { errors, isSubmitting },
+    } = useForm<LoginData>({
+        mode: "onBlur",
+        criteriaMode: "all",
+        resolver: zodResolver(loginSchema),
+    });
 
     const navigate = useNavigate();
+    const [error, setError] = useState<string | null>(null);
 
-    const handleLogin = async (e?: React.FormEvent) => {
-        e?.preventDefault();
+    const onSubmit: SubmitHandler<LoginData> = async (data) => {
         setError(null);
-        setIsLoading(true);
 
         try {
-            const userData = await loginUser(email, password);
+            const userData = await loginUser(data.email, data.password);
 
             // Salva o token localmente para autenticar as próximas requisições
             localStorage.setItem("token", userData.token);
@@ -35,8 +49,6 @@ export function LoginForm() {
             } else {
                 setError("Ocorreu um erro inesperado. Tente novamente.");
             }
-        } finally {
-            setIsLoading(false);
         }
     };
 
@@ -55,7 +67,7 @@ export function LoginForm() {
                 </div>
             )}
 
-            <form className="space-y-6 text-left" onSubmit={handleLogin}>
+            <form className="space-y-6 text-left" onSubmit={handleSubmit(onSubmit)}>
                 <div>
                     <label
                         htmlFor="email"
@@ -66,12 +78,12 @@ export function LoginForm() {
                     <input
                         type="email"
                         id="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
                         placeholder="voce@email.com"
                         required
                         className="w-full rounded-xl border border-white/10 bg-[#020618] px-4 py-3 text-white placeholder-[#475569] outline-none transition focus:border-white/20 focus:ring-1 focus:ring-white/20"
+                        {...register("email")}
                     />
+                    {errors?.email && <p className="text-red-500 text-sm absolute">{errors?.email.message}</p>}
                 </div>
 
                 <div>
@@ -84,12 +96,12 @@ export function LoginForm() {
                     <input
                         type="password"
                         id="pass"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
                         placeholder="Sua senha"
                         required
                         className="w-full rounded-xl border border-white/10 bg-[#020618] px-4 py-3 text-white placeholder-[#475569] outline-none transition focus:border-white/20 focus:ring-1 focus:ring-white/20"
+                        {...register("password")}
                     />
+                    {errors?.password && <p className="text-red-500 text-sm absolute">{errors?.password.message}</p>}
                 </div>
 
                 <div className="pt-2">
@@ -98,9 +110,9 @@ export function LoginForm() {
                         size="md"
                         classes="w-full justify-center"
                         type="submit"
-                        disabled={isLoading}
+                        disabled={isSubmitting}
                     >
-                        {isLoading ? "Entrando..." : "Entrar"}
+                        {isSubmitting ? "Entrando..." : "Entrar"}
                     </Button>
                 </div>
             </form>
