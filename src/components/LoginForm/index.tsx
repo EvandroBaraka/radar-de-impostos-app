@@ -8,7 +8,10 @@ import { loginUser } from "../../services/auth";
 
 const loginSchema = z.object({
     email: z.email("Utilize um email válido"),
-    password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres").max(30, "A senha deve ter no máximo 30 caracteres"),
+    password: z
+        .string()
+        .min(6, "A senha deve ter pelo menos 6 caracteres")
+        .max(30, "A senha deve ter no máximo 30 caracteres"),
 });
 
 type LoginData = z.infer<typeof loginSchema>;
@@ -38,7 +41,6 @@ export function LoginForm() {
             localStorage.setItem("userName", userData.userName);
             localStorage.setItem("userEmail", userData.userEmail);
 
-
             // Redireciona o usuário para o dashboard após login bem sucedido
             navigate({ to: "/dashboard" });
         } catch (err: unknown) {
@@ -67,7 +69,10 @@ export function LoginForm() {
                 </div>
             )}
 
-            <form className="space-y-6 text-left" onSubmit={handleSubmit(onSubmit)}>
+            <form
+                className="space-y-6 text-left"
+                onSubmit={handleSubmit(onSubmit)}
+            >
                 <div>
                     <label
                         htmlFor="email"
@@ -83,7 +88,11 @@ export function LoginForm() {
                         className="w-full rounded-xl border border-white/10 bg-[#020618] px-4 py-3 text-white placeholder-[#475569] outline-none transition focus:border-white/20 focus:ring-1 focus:ring-white/20"
                         {...register("email")}
                     />
-                    {errors?.email && <p className="text-red-500 text-sm absolute">{errors?.email.message}</p>}
+                    {errors?.email && (
+                        <p className="text-red-500 text-sm absolute">
+                            {errors?.email.message}
+                        </p>
+                    )}
                 </div>
 
                 <div>
@@ -101,7 +110,11 @@ export function LoginForm() {
                         className="w-full rounded-xl border border-white/10 bg-[#020618] px-4 py-3 text-white placeholder-[#475569] outline-none transition focus:border-white/20 focus:ring-1 focus:ring-white/20"
                         {...register("password")}
                     />
-                    {errors?.password && <p className="text-red-500 text-sm absolute">{errors?.password.message}</p>}
+                    {errors?.password && (
+                        <p className="text-red-500 text-sm absolute">
+                            {errors?.password.message}
+                        </p>
+                    )}
                 </div>
 
                 <div className="pt-2">

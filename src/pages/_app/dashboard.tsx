@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect, Link } from "@tanstack/react-router";
 import { useState, lazy, Suspense, useEffect, useCallback } from "react";
 import {
     TrendingUp,
@@ -8,14 +8,6 @@ import {
     Receipt as ReceiptIcon,
     Trophy,
     QrCode,
-    ShoppingBag,
-    Utensils,
-    Pill,
-    Cross,
-    Fuel,
-    Shirt,
-    MonitorSmartphone,
-    Bus
 } from "lucide-react";
 import {
     XAxis,
@@ -31,25 +23,10 @@ import { saveReceipt, listReceipts, getStats } from "../../services/receipts";
 import { CupomFiscal } from "../../models/CupomFiscal";
 import Loader from "../../components/Loader";
 import { Button } from "../../components/Button";
+import { getCategoryIcon } from "../../utils/category-icons";
 
 const Modal = lazy(() => import("../../components/Modal"));
 const QrScanner = lazy(() => import("../../components/QrScanner"));
-
-const categoryIcons: { [key: string]: React.ElementType } = {
-    "Mercado": ShoppingBag,
-    "Farmácia": Pill,
-    "Restaurante": Utensils,
-    "Combustível": Fuel,
-    "Vestuário": Shirt,
-    "Eletrônicos": MonitorSmartphone,
-    "Saúde": Cross,
-    "Transporte": Bus,
-    "Outros": ReceiptIcon,
-};
-
-const getCategoryIcon = (category: string) => {
-    return categoryIcons[category] || ReceiptIcon;
-};
 
 // Mock data para o gráfico enquanto a API não fornece dados históricos por mês
 const chartData = [
@@ -77,20 +54,23 @@ function Dashboard() {
     const [cupom, setCupom] = useState<CupomFiscal | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [receipts, setReceipts] = useState<CupomFiscal[]>([]);
-    const [stats, setStats] = useState<{ totalSpent: number, totalTaxes: number } | null>(null);
-    
+    const [stats, setStats] = useState<{
+        totalSpent: number;
+        totalTaxes: number;
+    } | null>(null);
+
     const userName = localStorage.getItem("userName");
     const token = localStorage.getItem("token");
 
     const loadDashboardData = useCallback(async () => {
         if (!token) return;
-        
+
         try {
             const [receiptsData, statsData] = await Promise.all([
                 listReceipts(token),
-                getStats(token)
+                getStats(token),
             ]);
-            
+
             setReceipts(receiptsData);
             setStats(statsData);
         } catch (err) {
@@ -160,12 +140,16 @@ function Dashboard() {
             await saveReceipt(cupom, token);
             setIsModalOpen(false);
             setCupom(null);
-            
+
             // Recarrega os dados após salvar
             await loadDashboardData();
         } catch (err) {
             console.error(err);
-            setError(err instanceof Error ? err.message : "Erro ao salvar cupom fiscal");
+            setError(
+                err instanceof Error
+                    ? err.message
+                    : "Erro ao salvar cupom fiscal",
+            );
         } finally {
             setIsLoading(false);
         }
@@ -178,13 +162,17 @@ function Dashboard() {
         }).format(value);
     };
 
-    const taxBurden = stats && stats.totalSpent > 0 
-        ? ((stats.totalTaxes / stats.totalSpent) * 100).toFixed(1) 
-        : "0";
+    const taxBurden =
+        stats && stats.totalSpent > 0
+            ? ((stats.totalTaxes / stats.totalSpent) * 100).toFixed(1)
+            : "0";
 
-    const mostExpensiveReceipt = receipts.length > 0 
-        ? receipts.reduce((prev, current) => (prev.totalValue > current.totalValue) ? prev : current)
-        : null;
+    const mostExpensiveReceipt =
+        receipts.length > 0
+            ? receipts.reduce((prev, current) =>
+                  prev.totalValue > current.totalValue ? prev : current,
+              )
+            : null;
 
     return (
         <div className="w-full max-w-7xl mx-auto px-4 py-8 space-y-8 animate-in fade-in duration-500">
@@ -192,7 +180,8 @@ function Dashboard() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h1 className="text-3xl font-bold flex items-center gap-2">
-                        Olá, {userName} <span className="animate-bounce">👋</span>
+                        Olá, {userName}{" "}
+                        <span className="animate-bounce">👋</span>
                     </h1>
                     <p className="text-[#90a1b9]">
                         Aqui está o resumo dos seus impostos registrados.
@@ -229,18 +218,32 @@ function Dashboard() {
                     ) : cupom ? (
                         <div className="flex flex-col items-center justify-center gap-3">
                             <p className="text-center">
-                                <span className="font-bold">{cupom.storeName}</span><br />
-                                <span className="text-sm text-[#90a1b9]">Categoria: {cupom.category}</span><br />
-                                CNPJ: {cupom.cnpj} - {cupom.formatedDate}<br />
-                                Valor Total: {cupom.formatedTotalValue}<br />
-                                Impostos aproximados: {cupom.formatedTributes}<br />
-                                <span className="text-xs text-[#475569]">Chave: {cupom.nfeKey}</span>
+                                <span className="font-bold">
+                                    {cupom.storeName}
+                                </span>
+                                <br />
+                                <span className="text-sm text-[#90a1b9]">
+                                    Categoria: {cupom.category}
+                                </span>
+                                <br />
+                                CNPJ: {cupom.cnpj} - {cupom.formatedDate}
+                                <br />
+                                Valor Total: {cupom.formatedTotalValue}
+                                <br />
+                                Impostos aproximados: {cupom.formatedTributes}
+                                <br />
+                                <span className="text-xs text-[#475569]">
+                                    Chave: {cupom.nfeKey}
+                                </span>
                             </p>
                             <div className="flex gap-3 items-center justify-center">
                                 <Button onClick={() => setIsScannerOpen(true)}>
                                     Escanear novamente
                                 </Button>
-                                <Button onClick={handleSave} disabled={isLoading}>
+                                <Button
+                                    onClick={handleSave}
+                                    disabled={isLoading}
+                                >
                                     {isLoading ? "Salvando..." : "Salvar cupom"}
                                 </Button>
                             </div>
@@ -286,8 +289,16 @@ function Dashboard() {
                 />
                 <StatCard
                     title="Nota Mais Cara"
-                    value={mostExpensiveReceipt ? formatCurrency(mostExpensiveReceipt.totalValue) : "R$ 0,00"}
-                    description={mostExpensiveReceipt ? `${mostExpensiveReceipt.storeName} · ${mostExpensiveReceipt.formatedDate}` : "Nenhum cupom salvo"}
+                    value={
+                        mostExpensiveReceipt
+                            ? formatCurrency(mostExpensiveReceipt.totalValue)
+                            : "R$ 0,00"
+                    }
+                    description={
+                        mostExpensiveReceipt
+                            ? `${mostExpensiveReceipt.storeName} · ${mostExpensiveReceipt.formatedDate}`
+                            : "Nenhum cupom salvo"
+                    }
                     icon={Trophy}
                 />
             </div>
@@ -410,7 +421,7 @@ function Dashboard() {
                                         className="flex items-center justify-between group cursor-pointer"
                                     >
                                         <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 rounded-lg bg-[#1e293b] flex items-center justify-center group-hover:bg-[#334155] transition-colors">
+                                            <div className="w-10 h-10 shrink-0 rounded-lg bg-[#1e293b] flex items-center justify-center group-hover:bg-[#334155] transition-colors">
                                                 <Icon className="w-5 h-5 text-[#90a1b9]" />
                                             </div>
                                             <div>
@@ -431,9 +442,12 @@ function Dashboard() {
                         )}
                     </div>
                     {receipts.length > 5 && (
-                        <button className="w-full mt-8 py-2 text-sm text-[#90a1b9] hover:text-white transition-colors border-t border-[#1e293b]">
+                        <Link
+                            to="/history"
+                            className="block w-full mt-8 py-2 text-sm text-center text-[#90a1b9] hover:text-white transition-colors border-t border-[#1e293b]"
+                        >
                             Ver histórico completo
-                        </button>
+                        </Link>
                     )}
                 </div>
             </div>

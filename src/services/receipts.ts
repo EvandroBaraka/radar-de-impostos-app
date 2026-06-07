@@ -4,7 +4,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 export const saveReceipt = async (cupom: CupomFiscal, token: string) => {
     console.log("Salvando cupom:", cupom);
-    
+
     const response = await fetch(`${API_URL}/api/receipts/add`, {
         method: "POST",
         headers: {
@@ -17,7 +17,7 @@ export const saveReceipt = async (cupom: CupomFiscal, token: string) => {
             category: cupom.category,
             totalValue: cupom.totalValue,
             tributes: cupom.tributes,
-            purchaseDate: cupom.purchaseDate.toISOString().split('T')[0], // Envia apenas YYYY-MM-DD
+            purchaseDate: cupom.purchaseDate.toISOString().split("T")[0], // Envia apenas YYYY-MM-DD
             nfeKey: cupom.nfeKey,
         }),
     });
@@ -30,7 +30,9 @@ export const saveReceipt = async (cupom: CupomFiscal, token: string) => {
             if (e instanceof Error && !e.message.includes("Unexpected token")) {
                 throw e;
             }
-            throw new Error(`Erro ao salvar cupom: ${response.status} ${response.statusText}`);
+            throw new Error(
+                `Erro ao salvar cupom: ${response.status} ${response.statusText}`,
+            );
         }
     }
 
@@ -38,8 +40,17 @@ export const saveReceipt = async (cupom: CupomFiscal, token: string) => {
     return data;
 };
 
-export const listReceipts = async (token: string): Promise<CupomFiscal[]> => {
-    const response = await fetch(`${API_URL}/api/receipts/list`, {
+export const listReceipts = async (
+    token: string,
+    limit?: number,
+    offset?: number,
+): Promise<CupomFiscal[]> => {
+    const url = new URL(`${API_URL}/api/receipts/list`);
+    if (limit !== undefined) url.searchParams.append("limit", limit.toString());
+    if (offset !== undefined)
+        url.searchParams.append("offset", offset.toString());
+
+    const response = await fetch(url.toString(), {
         headers: {
             Authorization: `Bearer ${token}`,
         },
@@ -50,24 +61,42 @@ export const listReceipts = async (token: string): Promise<CupomFiscal[]> => {
     }
 
     const data = await response.json();
-    
-    return data.map((item: {
-        storeName: string;
-        cnpj: string;
-        category: string;
-        totalValue: number;
-        tributes: number;
-        purchaseDate: string;
-        nfeKey: string;
-    }) => new CupomFiscal(
-        item.storeName,
-        item.cnpj,
-        item.category,
-        item.totalValue,
-        item.tributes,
-        new Date(item.purchaseDate),
-        item.nfeKey
-    ));
+
+    return data.map(
+        (item: {
+            storeName: string;
+            cnpj: string;
+            category: string;
+            totalValue: number;
+            tributes: number;
+            purchaseDate: string;
+            nfeKey: string;
+        }) =>
+            new CupomFiscal(
+                item.storeName,
+                item.cnpj,
+                item.category,
+                item.totalValue,
+                item.tributes,
+                new Date(item.purchaseDate),
+                item.nfeKey,
+            ),
+    );
+};
+
+export const deleteReceipt = async (nfeKey: string, token: string) => {
+    const response = await fetch(`${API_URL}/api/receipts/${nfeKey}`, {
+        method: "DELETE",
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error("Erro ao excluir cupom");
+    }
+
+    return true;
 };
 
 export const getStats = async (token: string) => {
